@@ -46,7 +46,7 @@ from maa.toolkit import Toolkit
 from maa.custom_action import CustomAction
 from maa.custom_recognition import CustomRecognition
 from maa.buffer import ImageBuffer
-from maa.define import LoggingLevelEnum
+from maa.define import LoggingLevelEnum, MaaWin32InputMethodEnum
 from maa.context import Context, ContextEventSink
 from maa.event_sink import EventSink
 from maa.pipeline import JRecognitionType, JActionType, JOCR, JClick
@@ -835,6 +835,12 @@ def test_win32_relative_move():
     print("  PASS: win32 relative_move")
 
 
+def test_win32_interception_enum():
+    print("\n=== test_win32_interception_enum ===")
+    assert int(MaaWin32InputMethodEnum.Interception) == 1 << 9
+    print("  PASS: win32 interception enum")
+
+
 # ============================================================================
 # 主入口
 # ============================================================================
@@ -867,6 +873,9 @@ if __name__ == "__main__":
 
     # 测试 Win32 relative_move 正路径
     test_win32_relative_move()
+
+    # 测试 Win32 Interception 枚举导出
+    test_win32_interception_enum()
 
     print("\n" + "=" * 50)
     print("All binding tests passed!")
