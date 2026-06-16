@@ -453,11 +453,13 @@ std::optional<std::pair<int32_t, int32_t>> InterceptionInput::to_interception_co
         return std::nullopt;
     }
 
-    const auto clamped_x = std::clamp(point.x, 0, screen_width - 1);
-    const auto clamped_y = std::clamp(point.y, 0, screen_height - 1);
+    const int point_x = static_cast<int>(point.x);
+    const int point_y = static_cast<int>(point.y);
+    const int clamped_x = std::clamp(point_x, 0, screen_width - 1);
+    const int clamped_y = std::clamp(point_y, 0, screen_height - 1);
     const int32_t x = static_cast<int32_t>((static_cast<int64_t>(clamped_x) * 0xFFFF) / screen_width);
     const int32_t y = static_cast<int32_t>((static_cast<int64_t>(clamped_y) * 0xFFFF) / screen_height);
-    return { x, y };
+    return std::make_pair(x, y);
 }
 
 MAA_CTRL_UNIT_NS_END
