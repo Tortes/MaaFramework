@@ -96,7 +96,7 @@ enum MaaGlobalOptionEnum
     /// The level of log output to stdout
     ///
     /// value: MaaLoggingLevel, val_size: sizeof(MaaLoggingLevel)
-    /// default value is MaaLoggingLevel_Error
+    /// default value is MaaLoggingLevel_Debug
     MaaGlobalOption_StdoutLevel = 4,
 
     // Deprecated

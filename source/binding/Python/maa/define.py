@@ -197,7 +197,7 @@ class MaaGlobalOptionEnum(IntEnum):
     # The level of log output to stdout
     #
     # value, val_size: sizeof(MaaLoggingLevel)
-    # default value is MaaLoggingLevel_Error
+    # default value is MaaLoggingLevel_Debug
     StdoutLevel = 4
 
     # Whether to show hit draw
