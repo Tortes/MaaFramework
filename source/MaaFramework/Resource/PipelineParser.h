@@ -46,6 +46,10 @@ public:
     static bool parse_wait_freezes_value(const json::value& input, WaitFreezesParam& output, const WaitFreezesParam& default_value);
 
 private:
+    static bool parse_random_delay(
+        const json::value& input,
+        Action::RandomDelayParam& output,
+        const Action::RandomDelayParam& default_value);
     static bool parse_direct_hit_param(
         const json::value& input,
         MAA_VISION_NS::DirectHitParam& output,

@@ -818,6 +818,9 @@ std::optional<json::object> ResourceMgr::get_default_action_param(const std::str
     case Type::DoNothing:
         param = std::monostate { };
         break;
+    case Type::RandomDelay:
+        param = default_pipeline_.get_action_param<RandomDelayParam>(type);
+        break;
     case Type::Click:
         param = default_pipeline_.get_action_param<ClickParam>(type);
         break;

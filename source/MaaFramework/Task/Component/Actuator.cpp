@@ -1,5 +1,7 @@
 #include "Actuator.h"
 
+#include <algorithm>
+
 #include "CommandAction.h"
 #include "Controller/ControllerAgent.h"
 #include "CustomAction.h"
@@ -41,6 +43,10 @@ ActionResult Actuator::run(const cv::Rect& reco_hit, MaaRecoId reco_id, const Pi
     switch (pipeline_data.action_type) {
     case Type::DoNothing:
         result = do_nothing(pipeline_data.name);
+        break;
+
+    case Type::RandomDelay:
+        result = random_delay(std::get<RandomDelayParam>(pipeline_data.action_param), pipeline_data.name);
         break;
 
     case Type::Click:
@@ -192,6 +198,30 @@ ActionResult Actuator::click(const MAA_RES_NS::Action::ClickParam& param, const 
         .box = box,
         .success = ret,
         .detail = json::value(ctrl_param),
+    };
+}
+
+ActionResult Actuator::random_delay(const MAA_RES_NS::Action::RandomDelayParam& param, const std::string& name)
+{
+    auto [min_duration, max_duration] = std::minmax(param.duration_range[0], param.duration_range[1]);
+
+    uint duration = min_duration;
+    if (min_duration != max_duration) {
+        std::uniform_int_distribution<uint> dist(min_duration, max_duration);
+        duration = dist(rand_engine_);
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+
+    return ActionResult {
+        .action_id = action_id_,
+        .name = name,
+        .action = "RandomDelay",
+        .success = true,
+        .detail = json::object {
+            { "duration_range", param.duration_range },
+            { "duration", duration },
+        },
     };
 }
 

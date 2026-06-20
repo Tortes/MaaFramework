@@ -122,6 +122,7 @@ enum class Type
 {
     Invalid = 0,
     DoNothing,
+    RandomDelay,
     Click,
     LongPress,
     Swipe,
@@ -153,6 +154,11 @@ struct ClickParam
     uint contact = 0;
     int pressure = 1;
     std::array<uint, 2> duration_range { 50, 50 };
+};
+
+struct RandomDelayParam
+{
+    std::array<uint, 2> duration_range { 0, 0 };
 };
 
 struct LongPressParam
@@ -257,6 +263,7 @@ struct CustomParam
 
 using Param = std::variant<
     std::monostate,
+    RandomDelayParam,
     ClickParam,
     LongPressParam,
     SwipeParam,
@@ -277,6 +284,8 @@ using Param = std::variant<
 inline static const std::unordered_map<std::string, Type> kTypeMap = {
     { "DoNothing", Type::DoNothing },
     { "donothing", Type::DoNothing },
+    { "RandomDelay", Type::RandomDelay },
+    { "randomdelay", Type::RandomDelay },
     { "Click", Type::Click },
     { "click", Type::Click },
     { "Swipe", Type::Swipe },
@@ -324,17 +333,17 @@ inline static const std::unordered_map<std::string, Type> kTypeMap = {
 };
 
 inline static const std::unordered_map<Type, std::string> kTypeNameMap = {
-    { Type::DoNothing, "DoNothing" },   { Type::Click, "Click" },
-    { Type::LongPress, "LongPress" },   { Type::Swipe, "Swipe" },
-    { Type::MultiSwipe, "MultiSwipe" }, { Type::TouchDown, "TouchDown" },
-    { Type::TouchMove, "TouchMove" },   { Type::TouchUp, "TouchUp" },
-    { Type::ClickKey, "ClickKey" },     { Type::LongPressKey, "LongPressKey" },
-    { Type::InputText, "InputText" },   { Type::StartApp, "StartApp" },
-    { Type::StopApp, "StopApp" },       { Type::KeyDown, "KeyDown" },
-    { Type::KeyUp, "KeyUp" },           { Type::Scroll, "Scroll" },
-    { Type::StopTask, "StopTask" },     { Type::Command, "Command" },
-    { Type::Shell, "Shell" },           { Type::Screencap, "Screencap" },
-    { Type::Custom, "Custom" },
+    { Type::DoNothing, "DoNothing" },     { Type::RandomDelay, "RandomDelay" },
+    { Type::Click, "Click" },             { Type::LongPress, "LongPress" },
+    { Type::Swipe, "Swipe" },             { Type::MultiSwipe, "MultiSwipe" },
+    { Type::TouchDown, "TouchDown" },     { Type::TouchMove, "TouchMove" },
+    { Type::TouchUp, "TouchUp" },         { Type::ClickKey, "ClickKey" },
+    { Type::LongPressKey, "LongPressKey" }, { Type::InputText, "InputText" },
+    { Type::StartApp, "StartApp" },       { Type::StopApp, "StopApp" },
+    { Type::KeyDown, "KeyDown" },         { Type::KeyUp, "KeyUp" },
+    { Type::Scroll, "Scroll" },           { Type::StopTask, "StopTask" },
+    { Type::Command, "Command" },         { Type::Shell, "Shell" },
+    { Type::Screencap, "Screencap" },     { Type::Custom, "Custom" },
 };
 } // namespace Action
 

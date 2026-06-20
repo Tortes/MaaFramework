@@ -211,6 +211,10 @@ declare global {
 
         type ActionDoNothing = {}
 
+        type ActionRandomDelay = {
+            duration_range?: [number, number]
+        }
+
         type ActionClick = {
             target?: true | NodeName | Rect
             target_offset?: Rect
@@ -384,6 +388,7 @@ declare global {
 
         type ActionType =
             | 'DoNothing'
+            | 'RandomDelay'
             | 'Click'
             | 'LongPress'
             | 'Swipe'
@@ -417,6 +422,7 @@ declare global {
                   Mode
               >
             | MixAct<'DoNothing', ActionDoNothing, Mode>
+            | MixAct<'RandomDelay', ActionRandomDelay, Mode>
             | MixAct<'Click', ActionClick, Mode>
             | MixAct<'LongPress', ActionLongPress, Mode>
             | MixAct<'Swipe', ActionSwipe, Mode>

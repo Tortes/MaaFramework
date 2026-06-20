@@ -1045,6 +1045,15 @@ bool PipelineParser::parse_action(
     case Type::DoNothing:
         return true;
 
+    case Type::RandomDelay: {
+        auto default_param = default_mgr.get_action_param<RandomDelayParam>(Type::RandomDelay);
+        out_param = default_param;
+        return parse_random_delay(
+            param_input,
+            std::get<RandomDelayParam>(out_param),
+            same_type ? std::get<RandomDelayParam>(parent_param) : default_param);
+    } break;
+
     case Type::Click: {
         auto default_param = default_mgr.get_action_param<ClickParam>(Type::Click);
         out_param = default_param;
@@ -1198,6 +1207,19 @@ bool PipelineParser::parse_action(
     }
 
     return false;
+}
+
+bool PipelineParser::parse_random_delay(
+    const json::value& input,
+    Action::RandomDelayParam& output,
+    const Action::RandomDelayParam& default_value)
+{
+    if (!get_and_check_value(input, "duration_range", output.duration_range, default_value.duration_range)) {
+        LogError << "failed to get_and_check_value duration_range" << VAR(input);
+        return false;
+    }
+
+    return true;
 }
 
 bool PipelineParser::parse_click(const json::value& input, Action::ClickParam& output, const Action::ClickParam& default_value)

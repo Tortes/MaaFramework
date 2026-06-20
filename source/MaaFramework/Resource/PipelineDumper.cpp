@@ -288,6 +288,13 @@ PipelineV2::JAction PipelineDumper::dump_act(Action::Type type, const Action::Pa
         act.param = PipelineV2::JDoNothing { };
         break;
 
+    case Action::Type::RandomDelay: {
+        const auto& p = std::get<Action::RandomDelayParam>(param);
+        act.param = PipelineV2::JRandomDelay {
+            .duration_range = p.duration_range,
+        };
+    } break;
+
     case Action::Type::Click: {
         const auto& p = std::get<Action::ClickParam>(param);
         act.param = PipelineV2::JClick {

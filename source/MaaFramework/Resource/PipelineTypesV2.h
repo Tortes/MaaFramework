@@ -166,6 +166,13 @@ struct JDoNothing
     json::value to_json() const { return json::object(); }
 };
 
+struct JRandomDelay
+{
+    std::array<uint32_t, 2> duration_range { 0, 0 };
+
+    MEO_TOJSON(duration_range);
+};
+
 struct JClick
 {
     JTarget target;
@@ -322,6 +329,7 @@ struct JCustomAction
 
 using JActionParam = std::variant<
     JDoNothing,
+    JRandomDelay,
     JClick,
     JLongPress,
     JSwipe,

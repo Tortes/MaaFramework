@@ -943,6 +943,7 @@ class AlgorithmEnum(StrEnum):
 
 class ActionEnum(StrEnum):
     DoNothing = "DoNothing"
+    RandomDelay = "RandomDelay"
     Click = "Click"
     LongPress = "LongPress"
     Swipe = "Swipe"
@@ -1155,6 +1156,7 @@ ActionResult = Union[
 
 ActionResultDict = {
     ActionEnum.DoNothing: None,
+    ActionEnum.RandomDelay: None,
     ActionEnum.Click: ClickActionResult,
     ActionEnum.LongPress: LongPressActionResult,
     ActionEnum.Swipe: SwipeActionResult,

@@ -25,6 +25,7 @@ class JRecognitionType(StrEnum):
 
 class JActionType(StrEnum):
     DoNothing = "DoNothing"
+    RandomDelay = "RandomDelay"
     Click = "Click"
     LongPress = "LongPress"
     Swipe = "Swipe"
@@ -176,6 +177,11 @@ class JDoNothing:
 
 
 @dataclass
+class JRandomDelay:
+    duration_range: tuple[int, int] = (0, 0)
+
+
+@dataclass
 class JClick:
     target: JTarget = True
     target_offset: JRect = (0, 0, 0, 0)
@@ -300,6 +306,7 @@ class JCustomAction:
 # Action parameter union type
 JActionParam = Union[
     JDoNothing,
+    JRandomDelay,
     JClick,
     JLongPress,
     JSwipe,
@@ -429,6 +436,7 @@ class JPipelineParser:
         """Convert dict to appropriate JActionParam variant based on type."""
         param_type_map = {
             JActionType.DoNothing: JDoNothing,
+            JActionType.RandomDelay: JRandomDelay,
             JActionType.Click: JClick,
             JActionType.LongPress: JLongPress,
             JActionType.Swipe: JSwipe,

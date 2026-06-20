@@ -34,6 +34,7 @@ private:
     inline static std::atomic<MaaActId> s_global_action_id = kActIdBase;
 
 private:
+    ActionResult random_delay(const MAA_RES_NS::Action::RandomDelayParam& param, const std::string& name);
     ActionResult click(const MAA_RES_NS::Action::ClickParam& param, const cv::Rect& box, const std::string& name);
     ActionResult long_press(const MAA_RES_NS::Action::LongPressParam& param, const cv::Rect& box, const std::string& name);
     ActionResult swipe(const MAA_RES_NS::Action::SwipeParam& param, const cv::Rect& box, const std::string& name);

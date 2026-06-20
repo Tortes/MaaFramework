@@ -59,6 +59,7 @@ from maa.pipeline import (
     JAnd,
     JOr,
     JCustomRecognition,
+    JRandomDelay,
     JClick,
     JLongPress,
     JSwipe,
@@ -681,6 +682,21 @@ class PipelineTestRecognition(CustomRecognition):
         assert_eq(param.contact, 1, "contact")
         assert_eq(param.duration_range, [30, 80], "duration_range")
 
+        # RandomDelay
+        new_ctx.override_pipeline(
+            {
+                "ActRandomDelay": {
+                    "action": "RandomDelay",
+                    "duration_range": [120, 300],
+                }
+            }
+        )
+        obj = new_ctx.get_node_object("ActRandomDelay")
+        assert_eq(obj.action.type, JActionType.RandomDelay, "RandomDelay type")
+        param = obj.action.param
+        assert_true(isinstance(param, JRandomDelay), "RandomDelay param")
+        assert_eq(param.duration_range, [120, 300], "RandomDelay duration_range")
+
         # LongPress
         new_ctx.override_pipeline(
             {"ActLongPress": {"action": "LongPress", "duration": 2000}}
@@ -1056,8 +1072,8 @@ class PipelineTestRecognition(CustomRecognition):
                         },
                     },
                     "action": {
-                        "type": "Click",
-                        "param": {"target": True, "contact": 2, "duration_range": [40, 90]},
+                        "type": "RandomDelay",
+                        "param": {"duration_range": [40, 90]},
                     },
                     "pre_delay": 50,
                     "post_delay": 150,
@@ -1071,8 +1087,7 @@ class PipelineTestRecognition(CustomRecognition):
         assert_eq(obj.recognition.param.template, ["v2.png"], "v2 template")
         assert_eq(obj.recognition.param.threshold, [0.9], "v2 threshold")
 
-        assert_eq(obj.action.type, JActionType.Click, "v2 action type")
-        assert_eq(obj.action.param.contact, 2, "v2 contact")
+        assert_eq(obj.action.type, JActionType.RandomDelay, "v2 action type")
         assert_eq(obj.action.param.duration_range, [40, 90], "v2 duration_range")
 
         assert_eq(obj.pre_delay, 50, "v2 pre_delay")

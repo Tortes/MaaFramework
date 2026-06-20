@@ -2086,6 +2086,56 @@
                 }
             }
         },
+        "RandomDelay": {
+            "type": "object",
+            "properties": {
+                "duration_range": {
+                    "title": "Duration Range Property",
+                    "description": "随机等待时间范围（毫秒）。可选，默认 [0, 0] 。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/jsonUInt32"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "default": [
+                        0,
+                        0
+                    ],
+                    "markdownDescription": "*array<uint, 2>*\n\n随机等待时间范围（毫秒）。可选，默认 `[0, 0]` 。\n\n框架会在闭区间 `[min, max]` 内随机取一个值并等待对应时长；当两个值相等时即为固定等待时长。"
+                }
+            }
+        },
+        "RandomDelayV1": {
+            "properties": {
+                "action": {
+                    "const": "RandomDelay"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/$defs/RandomDelay"
+                }
+            ]
+        },
+        "RandomDelayV2": {
+            "properties": {
+                "type": {
+                    "const": "RandomDelay"
+                },
+                "param": {
+                    "unevaluatedProperties": false,
+                    "allOf": [
+                        {
+                            "$ref": "#/$defs/RandomDelay"
+                        },
+                        {
+                            "$ref": "#/$defs/jsonComments"
+                        }
+                    ]
+                }
+            }
+        },
         "Click": {
             "type": "object",
             "properties": {
@@ -3362,6 +3412,7 @@
             "default": "DoNothing",
             "enum": [
                 "DoNothing",
+                "RandomDelay",
                 "Click",
                 "LongPress",
                 "Swipe",
@@ -3604,6 +3655,16 @@
                 }
             },
             "defaultSnippets": [
+                {
+                    "label": "RandomDelayV1",
+                    "body": "^ \"RandomDelay\""
+                },
+                {
+                    "label": "RandomDelayV2",
+                    "body": {
+                        "type": "RandomDelay"
+                    }
+                },
                 {
                     "label": "ClickV1",
                     "body": "^ \"Click\""
@@ -3868,6 +3929,9 @@
                     "$ref": "#/$defs/DoNothingV1"
                 },
                 {
+                    "$ref": "#/$defs/RandomDelayV1"
+                },
+                {
                     "$ref": "#/$defs/ClickV1"
                 },
                 {
@@ -3953,6 +4017,9 @@
                         },
                         {
                             "$ref": "#/$defs/DoNothingV2"
+                        },
+                        {
+                            "$ref": "#/$defs/RandomDelayV2"
                         },
                         {
                             "$ref": "#/$defs/ClickV2"
