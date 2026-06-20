@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -25,8 +26,9 @@ struct ClickParam
     cv::Point point { };
     int contact = 0;
     int pressure = 1;
+    std::array<uint, 2> duration_range { 50, 50 };
 
-    MEO_TOJSON(point, contact, pressure);
+    MEO_TOJSON(point, contact, pressure, duration_range);
 };
 
 struct LongPressParam

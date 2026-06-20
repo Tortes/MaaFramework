@@ -2114,6 +2114,21 @@
                     "$ref": "#/$defs/jsonInt32",
                     "markdownDescription": "*int*\n\n触点力度。可选，默认 1 。",
                     "default": 1
+                },
+                "duration_range": {
+                    "title": "Duration Range Property",
+                    "description": "点击按下与释放之间的随机等待时间范围（毫秒）。可选，默认 [50, 50] 。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/jsonUInt32"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "default": [
+                        50,
+                        50
+                    ],
+                    "markdownDescription": "*array<uint, 2>*\n\n点击按下与释放之间的随机等待时间范围（毫秒）。可选，默认 `[50, 50]` 。\n\n框架会在闭区间 `[min, max]` 内随机取一个值作为本次点击的按压时长；当两个值相等时即为固定时长。"
                 }
             }
         },
@@ -3426,6 +3441,13 @@
                     "anyOf": [
                         {
                             "$ref": "#/$defs/Touch/properties/pressure"
+                        }
+                    ]
+                },
+                "duration_range": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Click/properties/duration_range"
                         }
                     ]
                 },

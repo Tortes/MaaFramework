@@ -295,6 +295,7 @@ PipelineV2::JAction PipelineDumper::dump_act(Action::Type type, const Action::Pa
             .target_offset = dump_rect(p.target.offset),
             .contact = p.contact,
             .pressure = p.pressure,
+            .duration_range = p.duration_range,
         };
     } break;
 

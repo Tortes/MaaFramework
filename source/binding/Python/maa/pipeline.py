@@ -181,6 +181,7 @@ class JClick:
     target_offset: JRect = (0, 0, 0, 0)
     contact: int = 0
     pressure: int = 1
+    duration_range: tuple[int, int] = (50, 50)
 
 
 @dataclass

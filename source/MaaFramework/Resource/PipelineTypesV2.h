@@ -172,8 +172,9 @@ struct JClick
     JRect target_offset { };
     uint32_t contact = 0;
     int32_t pressure = 1;
+    std::array<uint32_t, 2> duration_range { 50, 50 };
 
-    MEO_TOJSON(target, target_offset, contact, pressure);
+    MEO_TOJSON(target, target_offset, contact, pressure, duration_range);
 };
 
 struct JLongPress

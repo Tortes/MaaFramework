@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <chrono>
 #include <limits>
 #include <map>
@@ -151,6 +152,7 @@ struct ClickParam
     Target target;
     uint contact = 0;
     int pressure = 1;
+    std::array<uint, 2> duration_range { 50, 50 };
 };
 
 struct LongPressParam

@@ -1217,6 +1217,11 @@ bool PipelineParser::parse_click(const json::value& input, Action::ClickParam& o
         return false;
     }
 
+    if (!get_and_check_value(input, "duration_range", output.duration_range, default_value.duration_range)) {
+        LogError << "failed to get_and_check_value duration_range" << VAR(input);
+        return false;
+    }
+
     return true;
 }
 

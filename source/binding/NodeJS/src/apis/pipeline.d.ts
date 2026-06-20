@@ -215,6 +215,8 @@ declare global {
             target?: true | NodeName | Rect
             target_offset?: Rect
             contact?: number
+            pressure?: number
+            duration_range?: [number, number]
         }
 
         type ActionLongPress = {

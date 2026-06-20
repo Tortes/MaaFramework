@@ -670,6 +670,7 @@ class PipelineTestRecognition(CustomRecognition):
                     "target": [100, 200, 50, 50],
                     "target_offset": [10, 10, 0, 0],
                     "contact": 1,
+                    "duration_range": [30, 80],
                 }
             }
         )
@@ -678,6 +679,7 @@ class PipelineTestRecognition(CustomRecognition):
         param = obj.action.param
         assert_true(isinstance(param, JClick), "Click param")
         assert_eq(param.contact, 1, "contact")
+        assert_eq(param.duration_range, [30, 80], "duration_range")
 
         # LongPress
         new_ctx.override_pipeline(
@@ -1055,7 +1057,7 @@ class PipelineTestRecognition(CustomRecognition):
                     },
                     "action": {
                         "type": "Click",
-                        "param": {"target": True, "contact": 2},
+                        "param": {"target": True, "contact": 2, "duration_range": [40, 90]},
                     },
                     "pre_delay": 50,
                     "post_delay": 150,
@@ -1071,6 +1073,7 @@ class PipelineTestRecognition(CustomRecognition):
 
         assert_eq(obj.action.type, JActionType.Click, "v2 action type")
         assert_eq(obj.action.param.contact, 2, "v2 contact")
+        assert_eq(obj.action.param.duration_range, [40, 90], "v2 duration_range")
 
         assert_eq(obj.pre_delay, 50, "v2 pre_delay")
         assert_eq(obj.post_delay, 150, "v2 post_delay")

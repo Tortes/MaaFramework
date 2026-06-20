@@ -335,6 +335,7 @@ def test_resource_api():
     click_default = resource.get_default_action_param(JActionType.Click)
     print(f"  click_default: {click_default}")
     assert click_default is not None, "get_default_action_param should return value"
+    assert click_default.get("duration_range") == [50, 50], "click default duration_range"
 
     swipe_default = resource.get_default_action_param(JActionType.Swipe)
     print(f"  swipe_default: {swipe_default}")

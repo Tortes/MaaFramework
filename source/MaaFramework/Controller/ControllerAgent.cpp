@@ -1,5 +1,8 @@
 #include "ControllerAgent.h"
 
+#include <algorithm>
+#include <random>
+
 #include "Global/OptionMgr.h"
 #include "Global/PluginMgr.h"
 #include "MaaFramework/MaaMsg.h"
@@ -8,6 +11,28 @@
 #include "Resource/ResourceMgr.h"
 
 MAA_CTRL_NS_BEGIN
+
+namespace
+{
+
+std::mt19937& click_duration_engine()
+{
+    static std::mt19937 engine(std::random_device { }());
+    return engine;
+}
+
+uint get_click_hold_duration_ms(const ClickParam& param)
+{
+    auto [min_duration, max_duration] = std::minmax(param.duration_range[0], param.duration_range[1]);
+    if (min_duration == max_duration) {
+        return min_duration;
+    }
+
+    std::uniform_int_distribution<uint> dist(min_duration, max_duration);
+    return dist(click_duration_engine());
+}
+
+} // namespace
 
 ControllerAgent::ControllerAgent(std::shared_ptr<MAA_CTRL_UNIT_NS::ControlUnitAPI> control_unit)
     : control_unit_(std::move(control_unit))
@@ -455,15 +480,19 @@ bool ControllerAgent::handle_click(const ClickParam& param)
              << VAR(point)
              << VAR(param.contact)
              << VAR(param.pressure)
+             << VAR(param.duration_range)
              << VAR(features)
              << VAR(use_touch_down_up);
 
     bool ret = true;
     if (use_touch_down_up) {
-        constexpr int kClickHoldMs = 50;
-        LogDebug << "click synthesized as touch_down/touch_up" << VAR(kClickHoldMs) << VAR(param.contact);
+        const uint click_hold_ms = get_click_hold_duration_ms(param);
+        LogDebug << "click synthesized as touch_down/touch_up"
+                 << VAR(click_hold_ms)
+                 << VAR(param.duration_range)
+                 << VAR(param.contact);
         ret &= control_unit_->touch_down(param.contact, point.x, point.y, param.pressure);
-        std::this_thread::sleep_for(std::chrono::milliseconds(kClickHoldMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(click_hold_ms));
         ret &= control_unit_->touch_up(param.contact);
     }
     else {
