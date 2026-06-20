@@ -69,11 +69,6 @@ bool Win32ControlUnitMgr::connect()
         return false;
     }
 
-    if (keyboard_method_ == MaaWin32InputMethod_Interception) {
-        LogError << "MaaWin32InputMethod_Interception only supports mouse input; please choose another keyboard method";
-        return false;
-    }
-
     if (mouse_method_ == keyboard_method_) {
         mouse_ = make_input(mouse_method_);
         keyboard_ = mouse_;

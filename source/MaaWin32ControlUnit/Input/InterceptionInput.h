@@ -39,6 +39,15 @@ public: // from InputBase
     virtual void inactive() override;
 
 private:
+    struct KeyboardStroke
+    {
+        uint16_t unit_id = 0;
+        uint16_t code = 0;
+        uint16_t state = 0;
+        uint16_t reserved = 0;
+        uint32_t information = 0;
+    };
+
     struct MouseStroke
     {
         uint16_t unit_id = 0;
@@ -51,14 +60,19 @@ private:
         uint32_t information = 0;
     };
 
-    bool ensure_ready();
-    bool initialize_device();
-    void destroy_device();
+    bool ensure_mouse_ready();
+    bool ensure_keyboard_ready();
+    bool initialize_mouse_device();
+    bool initialize_keyboard_device();
+    void destroy_mouse_device();
+    void destroy_keyboard_device();
 
-    bool send_stroke(const MouseStroke& stroke);
+    bool send_mouse_stroke(const MouseStroke& stroke);
+    bool send_keyboard_stroke(const KeyboardStroke& stroke);
     bool move_to_client_point(int x, int y);
     bool send_button(int contact, bool button_down);
     bool send_scroll_axis(int delta, bool horizontal);
+    bool send_key(int key, bool key_up);
 
     std::pair<int, int> get_target_pos() const;
     std::optional<POINT> client_to_screen_point(int x, int y) const;
@@ -66,9 +80,12 @@ private:
 
 private:
     HWND hwnd_ = nullptr;
-    HANDLE device_handle_ = INVALID_HANDLE_VALUE;
-    HANDLE event_handle_ = nullptr;
+    HANDLE mouse_device_handle_ = INVALID_HANDLE_VALUE;
+    HANDLE mouse_event_handle_ = nullptr;
     int mouse_device_index_ = -1;
+    HANDLE keyboard_device_handle_ = INVALID_HANDLE_VALUE;
+    HANDLE keyboard_event_handle_ = nullptr;
+    int keyboard_device_index_ = -1;
 
     std::pair<int, int> last_pos_ { 0, 0 };
     bool last_pos_set_ = false;

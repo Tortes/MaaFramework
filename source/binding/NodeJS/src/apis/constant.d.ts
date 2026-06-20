@@ -119,7 +119,7 @@ declare global {
          * | PostMessageWithCursorPos     | Medium        | Maybe         | Briefly      | Yes                | Designed for apps that check real cursor position           |
          * | SendMessageWithWindowPos     | Medium        | Maybe         | No           | Yes                | Moves window to align target with cursor, then restores     |
          * | PostMessageWithWindowPos     | Medium        | Maybe         | No           | Yes                | Moves window to align target with cursor, then restores     |
-         * | Interception                 | Medium        | Yes           | No           | No                 | Driver-level mouse injection via the Interception driver    |
+         * | Interception                 | Medium        | Yes           | No           | No                 | Driver-level input injection via the Interception driver    |
          *
          * Note:
          * - Admin rights mainly depend on the target application's privilege level.

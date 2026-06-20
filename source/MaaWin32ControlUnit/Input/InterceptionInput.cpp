@@ -7,6 +7,7 @@
 #include <format>
 #include <thread>
 
+#include "MaaUtils/Encoding.h"
 #include "MaaUtils/Logger.h"
 
 #include "InputUtils.h"
@@ -26,6 +27,9 @@ constexpr int kMouseDeviceEnd = 19;
 
 constexpr uint16_t kMouseMoveRelative = 0x0000;
 constexpr uint16_t kMouseMoveAbsolute = 0x0001;
+constexpr uint16_t kKeyUp = 0x0001;
+constexpr uint16_t kKeyE0 = 0x0002;
+constexpr uint16_t kKeyE1 = 0x0004;
 
 constexpr uint16_t kMouseLeftButtonDown = 0x0001;
 constexpr uint16_t kMouseLeftButtonUp = 0x0002;
@@ -56,6 +60,11 @@ constexpr DWORD kIoctlGetHardwareId = ctl_code(kFileDeviceUnknown, 0x880, kMetho
 bool is_valid_mouse_index(int index)
 {
     return index >= kMouseDeviceStart && index <= kMouseDeviceEnd;
+}
+
+bool is_valid_keyboard_index(int index)
+{
+    return index >= 0 && index < kKeyboardDeviceCount;
 }
 
 std::wstring device_path(int index)
@@ -155,6 +164,18 @@ std::optional<int> find_mouse_device_index()
     return found;
 }
 
+std::optional<int> find_keyboard_device_index()
+{
+    std::optional<int> found;
+    for (int index = 0; index < kKeyboardDeviceCount; ++index) {
+        std::wstring hardware_id;
+        if (query_hardware_id(index, hardware_id)) {
+            found = index;
+        }
+    }
+    return found;
+}
+
 bool contact_to_interception_button(int contact, bool button_down, uint16_t& button_flag)
 {
     const int mapped_contact = GetMappedContact(contact);
@@ -188,12 +209,13 @@ InterceptionInput::InterceptionInput(HWND hwnd)
 
 InterceptionInput::~InterceptionInput()
 {
-    destroy_device();
+    destroy_mouse_device();
+    destroy_keyboard_device();
 }
 
 MaaControllerFeature InterceptionInput::get_features() const
 {
-    return MaaControllerFeature_UseMouseDownAndUpInsteadOfClick;
+    return MaaControllerFeature_UseMouseDownAndUpInsteadOfClick | MaaControllerFeature_UseKeyboardDownAndUpInsteadOfClick;
 }
 
 bool InterceptionInput::click(int x, int y)
@@ -214,7 +236,7 @@ bool InterceptionInput::swipe(int x1, int y1, int x2, int y2, int duration)
 
 bool InterceptionInput::touch_down(int contact, int x, int y, int pressure)
 {
-    if (!ensure_ready()) {
+    if (!ensure_mouse_ready()) {
         return false;
     }
 
@@ -238,7 +260,7 @@ bool InterceptionInput::touch_move(int contact, int x, int y, int pressure)
     std::ignore = contact;
     std::ignore = pressure;
 
-    if (!ensure_ready()) {
+    if (!ensure_mouse_ready()) {
         return false;
     }
 
@@ -253,7 +275,7 @@ bool InterceptionInput::touch_move(int contact, int x, int y, int pressure)
 
 bool InterceptionInput::touch_up(int contact)
 {
-    if (!ensure_ready()) {
+    if (!ensure_mouse_ready()) {
         return false;
     }
 
@@ -263,31 +285,55 @@ bool InterceptionInput::touch_up(int contact)
 
 bool InterceptionInput::click_key(int key)
 {
-    LogError << "InterceptionInput only supports mouse input, click_key is unavailable" << VAR(key);
+    LogError << "deprecated: get_features() returns MaaControllerFeature_UseKeyboardDownAndUpInsteadOfClick, "
+                "use key_down/key_up instead"
+             << VAR(key);
     return false;
 }
 
 bool InterceptionInput::input_text(const std::string& text)
 {
-    LogError << "InterceptionInput only supports mouse input, input_text is unavailable" << VAR(text);
-    return false;
+    auto u16_text = to_u16(text);
+    LogInfo << VAR(text) << VAR(u16_text) << VAR(mouse_device_index_) << VAR(keyboard_device_index_) << VAR_VOIDP(hwnd_);
+
+    for (const auto ch : u16_text) {
+        INPUT input = { };
+        input.type = INPUT_KEYBOARD;
+        input.ki.dwFlags = KEYEVENTF_UNICODE;
+        input.ki.wScan = ch;
+
+        SendInput(1, &input, sizeof(INPUT));
+
+        input.ki.dwFlags |= KEYEVENTF_KEYUP;
+        SendInput(1, &input, sizeof(INPUT));
+    }
+
+    return true;
 }
 
 bool InterceptionInput::key_down(int key)
 {
-    LogError << "InterceptionInput only supports mouse input, key_down is unavailable" << VAR(key);
-    return false;
+    if (!ensure_keyboard_ready()) {
+        return false;
+    }
+
+    LogInfo << VAR(key) << VAR(keyboard_device_index_) << VAR_VOIDP(hwnd_);
+    return send_key(key, false);
 }
 
 bool InterceptionInput::key_up(int key)
 {
-    LogError << "InterceptionInput only supports mouse input, key_up is unavailable" << VAR(key);
-    return false;
+    if (!ensure_keyboard_ready()) {
+        return false;
+    }
+
+    LogInfo << VAR(key) << VAR(keyboard_device_index_) << VAR_VOIDP(hwnd_);
+    return send_key(key, true);
 }
 
 bool InterceptionInput::scroll(int dx, int dy)
 {
-    if (!ensure_ready()) {
+    if (!ensure_mouse_ready()) {
         return false;
     }
 
@@ -310,20 +356,29 @@ bool InterceptionInput::scroll(int dx, int dy)
 
 void InterceptionInput::inactive()
 {
-    destroy_device();
+    destroy_mouse_device();
+    destroy_keyboard_device();
 }
 
-bool InterceptionInput::ensure_ready()
+bool InterceptionInput::ensure_mouse_ready()
 {
-    if (device_handle_ != INVALID_HANDLE_VALUE && is_valid_mouse_index(mouse_device_index_)) {
+    if (mouse_device_handle_ != INVALID_HANDLE_VALUE && is_valid_mouse_index(mouse_device_index_)) {
         return true;
     }
-    return initialize_device();
+    return initialize_mouse_device();
 }
 
-bool InterceptionInput::initialize_device()
+bool InterceptionInput::ensure_keyboard_ready()
 {
-    destroy_device();
+    if (keyboard_device_handle_ != INVALID_HANDLE_VALUE && is_valid_keyboard_index(keyboard_device_index_)) {
+        return true;
+    }
+    return initialize_keyboard_device();
+}
+
+bool InterceptionInput::initialize_mouse_device()
+{
+    destroy_mouse_device();
 
     auto mouse_index = find_mouse_device_index();
     if (!mouse_index) {
@@ -331,9 +386,9 @@ bool InterceptionInput::initialize_device()
         return false;
     }
 
-    if (!open_device_handle(*mouse_index, device_handle_, event_handle_)) {
+    if (!open_device_handle(*mouse_index, mouse_device_handle_, mouse_event_handle_)) {
         LogError << "Failed to open Interception mouse device" << VAR(*mouse_index) << VAR(GetLastError());
-        destroy_device();
+        destroy_mouse_device();
         return false;
     }
 
@@ -342,22 +397,49 @@ bool InterceptionInput::initialize_device()
     return true;
 }
 
-void InterceptionInput::destroy_device()
+bool InterceptionInput::initialize_keyboard_device()
 {
-    close_device_handle(device_handle_, event_handle_);
+    destroy_keyboard_device();
+
+    auto keyboard_index = find_keyboard_device_index();
+    if (!keyboard_index) {
+        LogError << "Interception driver not found or no keyboard device available";
+        return false;
+    }
+
+    if (!open_device_handle(*keyboard_index, keyboard_device_handle_, keyboard_event_handle_)) {
+        LogError << "Failed to open Interception keyboard device" << VAR(*keyboard_index) << VAR(GetLastError());
+        destroy_keyboard_device();
+        return false;
+    }
+
+    keyboard_device_index_ = *keyboard_index;
+    LogInfo << "Interception keyboard device initialized" << VAR(keyboard_device_index_);
+    return true;
+}
+
+void InterceptionInput::destroy_mouse_device()
+{
+    close_device_handle(mouse_device_handle_, mouse_event_handle_);
     mouse_device_index_ = -1;
 }
 
-bool InterceptionInput::send_stroke(const MouseStroke& stroke)
+void InterceptionInput::destroy_keyboard_device()
 {
-    if (device_handle_ == INVALID_HANDLE_VALUE) {
+    close_device_handle(keyboard_device_handle_, keyboard_event_handle_);
+    keyboard_device_index_ = -1;
+}
+
+bool InterceptionInput::send_mouse_stroke(const MouseStroke& stroke)
+{
+    if (mouse_device_handle_ == INVALID_HANDLE_VALUE) {
         LogError << "Interception device handle is invalid";
         return false;
     }
 
     DWORD bytes_returned = 0;
     const BOOL ok = DeviceIoControl(
-        device_handle_,
+        mouse_device_handle_,
         kIoctlWrite,
         const_cast<MouseStroke*>(&stroke),
         static_cast<DWORD>(sizeof(stroke)),
@@ -368,6 +450,32 @@ bool InterceptionInput::send_stroke(const MouseStroke& stroke)
 
     if (!ok) {
         LogError << "Interception DeviceIoControl(IOCTL_WRITE) failed" << VAR(GetLastError()) << VAR(mouse_device_index_);
+        return false;
+    }
+
+    return true;
+}
+
+bool InterceptionInput::send_keyboard_stroke(const KeyboardStroke& stroke)
+{
+    if (keyboard_device_handle_ == INVALID_HANDLE_VALUE) {
+        LogError << "Interception keyboard device handle is invalid";
+        return false;
+    }
+
+    DWORD bytes_returned = 0;
+    const BOOL ok = DeviceIoControl(
+        keyboard_device_handle_,
+        kIoctlWrite,
+        const_cast<KeyboardStroke*>(&stroke),
+        static_cast<DWORD>(sizeof(stroke)),
+        nullptr,
+        0,
+        &bytes_returned,
+        nullptr);
+
+    if (!ok) {
+        LogError << "Interception keyboard DeviceIoControl(IOCTL_WRITE) failed" << VAR(GetLastError()) << VAR(keyboard_device_index_);
         return false;
     }
 
@@ -400,7 +508,7 @@ bool InterceptionInput::move_to_client_point(int x, int y)
     stroke.flags = kMouseMoveAbsolute;
     stroke.x = ix;
     stroke.y = iy;
-    return send_stroke(stroke);
+    return send_mouse_stroke(stroke);
 }
 
 bool InterceptionInput::send_button(int contact, bool button_down)
@@ -423,7 +531,7 @@ bool InterceptionInput::send_button(int contact, bool button_down)
     MouseStroke stroke;
     stroke.flags = kMouseMoveAbsolute;
     stroke.button_flags = button_flag;
-    return send_stroke(stroke);
+    return send_mouse_stroke(stroke);
 }
 
 bool InterceptionInput::send_scroll_axis(int delta, bool horizontal)
@@ -432,7 +540,39 @@ bool InterceptionInput::send_scroll_axis(int delta, bool horizontal)
     stroke.flags = kMouseMoveRelative;
     stroke.button_flags = horizontal ? kMouseHWheel : kMouseWheel;
     stroke.button_data = static_cast<uint16_t>(static_cast<int16_t>(delta));
-    return send_stroke(stroke);
+    return send_mouse_stroke(stroke);
+}
+
+bool InterceptionInput::send_key(int key, bool key_up)
+{
+    const UINT scan_code_ex = MapVirtualKeyW(static_cast<UINT>(key), MAPVK_VK_TO_VSC_EX);
+    if (scan_code_ex == 0) {
+        LogError << "MapVirtualKeyW returned invalid scan code" << VAR(key);
+        return false;
+    }
+
+    KeyboardStroke stroke;
+    stroke.code = static_cast<uint16_t>(scan_code_ex & 0xFF);
+    stroke.state = key_up ? kKeyUp : 0;
+
+    const UINT prefix = scan_code_ex & 0xFF00;
+    if (prefix == 0xE000) {
+        stroke.state |= kKeyE0;
+    }
+    else if (prefix == 0xE100) {
+        stroke.state |= kKeyE1;
+    }
+
+    LogDebug << "Interception send_key"
+             << VAR(key)
+             << VAR(scan_code_ex)
+             << VAR(stroke.code)
+             << VAR(stroke.state)
+             << VAR(key_up)
+             << VAR(keyboard_device_index_)
+             << VAR_VOIDP(hwnd_);
+
+    return send_keyboard_stroke(stroke);
 }
 
 std::pair<int, int> InterceptionInput::get_target_pos() const
