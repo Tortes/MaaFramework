@@ -22,6 +22,7 @@ constexpr DWORD kOpenExisting = 3;
 
 constexpr int kMaxDeviceCount = 20;
 constexpr int kKeyboardDeviceCount = 10;
+constexpr int kPreferredKeyboardDevice = 1;
 constexpr int kMouseDeviceStart = 10;
 constexpr int kMouseDeviceEnd = 19;
 
@@ -121,6 +122,18 @@ void close_device_handle(HANDLE& device_handle, HANDLE& event_handle)
     }
 }
 
+bool can_open_device(int index)
+{
+    HANDLE device_handle = INVALID_HANDLE_VALUE;
+    HANDLE event_handle = nullptr;
+    if (!open_device_handle(index, device_handle, event_handle)) {
+        return false;
+    }
+
+    close_device_handle(device_handle, event_handle);
+    return true;
+}
+
 bool query_hardware_id(int index, std::wstring& hardware_id)
 {
     HANDLE device_handle = INVALID_HANDLE_VALUE;
@@ -166,14 +179,19 @@ std::optional<int> find_mouse_device_index()
 
 std::optional<int> find_keyboard_device_index()
 {
-    std::optional<int> found;
+    if (can_open_device(kPreferredKeyboardDevice)) {
+        return kPreferredKeyboardDevice;
+    }
+
     for (int index = 0; index < kKeyboardDeviceCount; ++index) {
-        std::wstring hardware_id;
-        if (query_hardware_id(index, hardware_id)) {
-            found = index;
+        if (index == kPreferredKeyboardDevice) {
+            continue;
+        }
+        if (can_open_device(index)) {
+            return index;
         }
     }
-    return found;
+    return std::nullopt;
 }
 
 bool contact_to_interception_button(int contact, bool button_down, uint16_t& button_flag)
@@ -317,6 +335,8 @@ bool InterceptionInput::key_down(int key)
         return false;
     }
 
+    ensure_foreground();
+
     LogInfo << VAR(key) << VAR(keyboard_device_index_) << VAR_VOIDP(hwnd_);
     return send_key(key, false);
 }
@@ -326,6 +346,8 @@ bool InterceptionInput::key_up(int key)
     if (!ensure_keyboard_ready()) {
         return false;
     }
+
+    ensure_foreground();
 
     LogInfo << VAR(key) << VAR(keyboard_device_index_) << VAR_VOIDP(hwnd_);
     return send_key(key, true);
@@ -428,6 +450,20 @@ void InterceptionInput::destroy_keyboard_device()
 {
     close_device_handle(keyboard_device_handle_, keyboard_event_handle_);
     keyboard_device_index_ = -1;
+}
+
+bool InterceptionInput::ensure_foreground()
+{
+    if (!hwnd_) {
+        return true;
+    }
+
+    ensure_foreground_and_topmost(hwnd_);
+    if (hwnd_ != GetForegroundWindow()) {
+        LogWarn << "Failed to ensure foreground window before Interception keyboard input" << VAR_VOIDP(hwnd_);
+        return false;
+    }
+    return true;
 }
 
 bool InterceptionInput::send_mouse_stroke(const MouseStroke& stroke)

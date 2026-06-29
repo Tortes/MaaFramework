@@ -67,6 +67,7 @@ private:
     void destroy_mouse_device();
     void destroy_keyboard_device();
 
+    bool ensure_foreground();
     bool send_mouse_stroke(const MouseStroke& stroke);
     bool send_keyboard_stroke(const KeyboardStroke& stroke);
     bool move_to_client_point(int x, int y);
