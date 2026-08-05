@@ -12,13 +12,13 @@
 
 MAA_CTRL_UNIT_NS_BEGIN
 
-class InterceptionInput : public InputBase
+class InterceptionInput : public RelativeMoveInput
 {
 public:
     explicit InterceptionInput(HWND hwnd);
     virtual ~InterceptionInput() override;
 
-public: // from InputBase
+public: // from RelativeMoveInput
     virtual MaaControllerFeature get_features() const override;
 
     virtual bool click(int x, int y) override;
@@ -27,6 +27,8 @@ public: // from InputBase
     virtual bool touch_down(int contact, int x, int y, int pressure) override;
     virtual bool touch_move(int contact, int x, int y, int pressure) override;
     virtual bool touch_up(int contact) override;
+
+    virtual bool relative_move(int dx, int dy) override;
 
     virtual bool click_key(int key) override;
     virtual bool input_text(const std::string& text) override;

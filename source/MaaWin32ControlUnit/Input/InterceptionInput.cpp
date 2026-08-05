@@ -300,6 +300,25 @@ bool InterceptionInput::touch_up(int contact)
     return send_button(contact, false);
 }
 
+bool InterceptionInput::relative_move(int dx, int dy)
+{
+    if (dx == 0 && dy == 0) {
+        return true;
+    }
+
+    if (!ensure_mouse_ready()) {
+        return false;
+    }
+
+    LogInfo << VAR(dx) << VAR(dy) << VAR(mouse_device_index_) << VAR_VOIDP(hwnd_);
+
+    MouseStroke stroke;
+    stroke.flags = kMouseMoveRelative;
+    stroke.x = dx;
+    stroke.y = dy;
+    return send_mouse_stroke(stroke);
+}
+
 bool InterceptionInput::click_key(int key)
 {
     LogError << "deprecated: get_features() returns MaaControllerFeature_UseKeyboardDownAndUpInsteadOfClick, "
